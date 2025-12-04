@@ -60,3 +60,6 @@ CPackSourceConfig.cmake
 # System files
 .DS_Store
 Thumbs.db
+
+# Clangd cache
+.cache/
