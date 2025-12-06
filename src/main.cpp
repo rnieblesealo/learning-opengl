@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <filesystem>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace gle
 {
@@ -15,7 +17,7 @@ const std::filesystem::path FRAGMENT_SHADER_PATH("../src/glsl/fragment.glsl");
 
 GLuint VAO, VBO;
 GLuint shader;
-GLuint uniform_x_move;
+GLuint uniform_model;
 
 typedef enum Direction
 {
@@ -160,7 +162,9 @@ void CompileShaders()
 
   glBindVertexArray(0);
 
-  uniform_x_move = glGetUniformLocation(shader, "x_move");
+  // Get uniforms
+
+  uniform_model = glGetUniformLocation(shader, "model");
 }
 } // namespace gle
 
@@ -186,7 +190,7 @@ int main()
       glfwCreateWindow(gle::WINDOW_WIDTH, gle::WINDOW_HEIGHT, "GLEngine", NULL, NULL);
 
   // Get window framebuffer size
-  glm::ivec2 fb_size;
+  glm::ivec2 fb_size{};
   glfwGetFramebufferSize(main_window, &fb_size.x, &fb_size.y);
 
   // Set GLEW context
@@ -252,12 +256,19 @@ int main()
 
     // clang-format off
     glUseProgram(gle::shader);
-      glUniform1f(gle::uniform_x_move, gle::tri_offset); // Write uniform to shader
+
+      glm::mat4 model(1.0f);
+      model = glm::translate(model, glm::vec3(gle::tri_offset, gle::tri_offset, 0.0f));
+      glUniformMatrix4fv(gle::uniform_model,
+                         1,        // Passing only 1 matrix
+                         GL_FALSE, // Do NOT transpose
+                         glm::value_ptr(model));
+
       glBindVertexArray(gle::VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3); // Arg 1: Start vertex we wanna draw; Arg 2: Amt. of vertices to draw
       glBindVertexArray(0);
     glUseProgram(0);
-    // clang-format on
+    // clang-format on 
 
     glfwSwapBuffers(main_window); // 2 buffer system
   }
