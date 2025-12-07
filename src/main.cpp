@@ -26,12 +26,19 @@ typedef enum Direction
   RIGHT
 } Direction;
 
-Direction tri_direction     = RIGHT; // Direction where tri is moving right now
-float     tri_offset        = 0.0f;  // Current triangle displacement
-float     tri_max_offset    = 0.5f;  // Flip direction once we get this far
-float     tri_pos_increment = 0.0f;  // Amount to move tri by every frame
-float     tri_rot_increment = 0.08f; // Rotate by
-float     tri_rotation_deg  = 0.0f;  // Current tri rotation
+Direction tri_trans_dir       = RIGHT; // Direction where tri is moving right now
+float     tri_trans           = 0.5f;  // Current triangle displacement
+float     tri_trans_max       = 0.0f;  // Flip direction once we get this far
+float     tri_trans_increment = 0.0f;  // Amount to move tri by every frame
+
+float tri_rot           = 0.0f;  // Current tri rotation
+float tri_rot_increment = 0.08f; // Rotate by
+
+Direction tri_scale_dir       = RIGHT;
+float     tri_scale           = 1.0f;
+float     tri_scale_min       = 0.5f;
+float     tri_scale_max       = 1.0f;
+float     tri_scale_increment = 0.01f;
 
 void CreateTriangle()
 {
@@ -229,36 +236,55 @@ int main()
     // UPDATE ---------------------------------------------------------------------------------------------------------
 
     // Move tri in the direction it's meant to be going in
-    if (gle::tri_direction == gle::Direction::RIGHT)
+    if (gle::tri_trans_dir == gle::Direction::RIGHT)
     {
-      gle::tri_offset += gle::tri_pos_increment;
+      gle::tri_trans += gle::tri_trans_increment;
     }
-    else if (gle::tri_direction == gle::Direction::LEFT)
+    else if (gle::tri_trans_dir == gle::Direction::LEFT)
     {
-      gle::tri_offset -= gle::tri_pos_increment;
+      gle::tri_trans -= gle::tri_trans_increment;
     }
 
     // Switch tri direction when hitting max offset
-    if (std::abs(gle::tri_offset) >= gle::tri_max_offset)
+    if (std::abs(gle::tri_trans) >= gle::tri_trans_max)
     {
-      if (gle::tri_direction == gle::Direction::LEFT)
+      if (gle::tri_trans_dir == gle::Direction::LEFT)
       {
-        gle::tri_direction = gle::Direction::RIGHT;
+        gle::tri_trans_dir = gle::Direction::RIGHT;
       }
 
       else
       {
-        gle::tri_direction = gle::Direction::LEFT;
+        gle::tri_trans_dir = gle::Direction::LEFT;
       }
     }
 
     // Rotate tri
-    if (gle::tri_rotation_deg >= 360)
+    if (gle::tri_rot >= 360)
     {
-      gle::tri_rotation_deg = 0;
+      gle::tri_rot = 0;
     }
 
-    gle::tri_rotation_deg += gle::tri_rot_increment;
+    gle::tri_rot += gle::tri_rot_increment;
+
+    // Scale tri
+    if (gle::tri_scale >= gle::tri_scale_max)
+    {
+      gle::tri_scale_dir = gle::Direction::LEFT;
+    }
+    else if (gle::tri_scale <= gle::tri_scale_min)
+    {
+      gle::tri_scale_dir = gle::Direction::RIGHT;
+    }
+
+    if (gle::tri_scale_dir == gle::Direction::LEFT)
+    {
+      gle::tri_scale -= gle::tri_scale_increment;
+    }
+    else if (gle::tri_scale_dir == gle::Direction::RIGHT)
+    {
+      gle::tri_scale += gle::tri_scale_increment;
+    }
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 
@@ -270,8 +296,9 @@ int main()
 
       glm::mat4 model(1.0f);
 
-      model = glm::translate(model, glm::vec3(gle::tri_offset, gle::tri_offset, 0.0f)); // Translate
-      model = glm::rotate(model, glm::radians(gle::tri_rotation_deg), gle::FORWARD);    // Rotate around Z (forward)
+      model = glm::translate(model, glm::vec3(gle::tri_trans, gle::tri_trans, 0.0f)); // Translate
+      model = glm::rotate(model, glm::radians(gle::tri_rot), gle::FORWARD);           // Rotate around Z (forward)
+      model = glm::scale(model, glm::vec3(gle::tri_scale, gle::tri_scale, 1.0f));     // Rotate around Z (forward)
 
       glUniformMatrix4fv(gle::uniform_model,
                          1,        // Passing only 1 matrix
