@@ -9,17 +9,20 @@
 
 namespace gle
 {
-const GLint     WINDOW_WIDTH  = 800;
-const GLint     WINDOW_HEIGHT = 600;
+const GLint     WINDOW_WIDTH  = 500;
+const GLint     WINDOW_HEIGHT = 500;
 const glm::vec3 FORWARD{0.0f, 0.0f, 1.0f};
 const glm::vec3 UP{0.0f, 1.0f, 0.0f};
+const GLfloat   FOV  = 45;
+const GLfloat   NEAR = 0.1;
+const GLfloat   FAR  = 100.0f;
 
 const std::filesystem::path VERTEX_SHADER_PATH("../src/glsl/vertex.glsl");
 const std::filesystem::path FRAGMENT_SHADER_PATH("../src/glsl/fragment.glsl");
 
 GLuint VAO, VBO, EBO;
 GLuint shader;
-GLuint uniform_model;
+GLuint uniform_model, uniform_projection;
 
 typedef enum Direction
 {
@@ -28,12 +31,12 @@ typedef enum Direction
 } Direction;
 
 Direction tri_trans_dir       = RIGHT; // Direction where tri is moving right now
-float     tri_trans           = 0.0f;  // Current triangle displacement
+float     tri_trans           = -3.0f; // Current triangle displacement
 float     tri_trans_max       = 0.0f;  // Flip direction once we get this far
 float     tri_trans_increment = 0.0f;  // Amount to move tri by every frame
 
 float tri_rot           = 0.0f;  // Current tri rotation
-float tri_rot_increment = 0.25f; // Rotate by
+float tri_rot_increment = 0.35f; // Rotate by
 
 Direction tri_scale_dir       = RIGHT;
 float     tri_scale           = 0.5f;
@@ -187,8 +190,8 @@ void CompileShaders()
   glBindVertexArray(0);
 
   // Get uniforms
-
-  uniform_model = glGetUniformLocation(shader, "model");
+  uniform_model      = glGetUniformLocation(shader, "model");
+  uniform_projection = glGetUniformLocation(shader, "projection");
 }
 } // namespace gle
 
@@ -252,6 +255,9 @@ int main()
 
     // UPDATE ---------------------------------------------------------------------------------------------------------
 
+    glm::mat4 projection = glm::perspective(
+        gle::FOV, static_cast<GLfloat>(fb_size.x) / static_cast<GLfloat>(fb_size.y), gle::NEAR, gle::FAR);
+
     // Move tri in the direction it's meant to be going in
     if (gle::tri_trans_dir == gle::Direction::RIGHT)
     {
@@ -312,10 +318,12 @@ int main()
     // clang-format off
     glUseProgram(gle::shader);
 
+      glUniformMatrix4fv(gle::uniform_projection, 1, GL_FALSE, glm::value_ptr(projection));
+
       glm::mat4 model(1.0f);
 
-      model = glm::translate(model, glm::vec3(gle::tri_trans, gle::tri_trans, 0.0f));
-      model = glm::rotate(model, glm::radians(gle::tri_rot), gle::UP);
+      model = glm::translate(model, glm::vec3(0.0f, 0.0f, gle::tri_trans));
+      model = glm::rotate(model, glm::radians(gle::tri_rot), glm::vec3(0.0f, 1.0f, 0.0f));
       model = glm::scale(model, glm::vec3(gle::tri_scale, gle::tri_scale, 1.0f));
 
       glUniformMatrix4fv(gle::uniform_model,
