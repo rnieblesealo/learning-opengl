@@ -236,6 +236,9 @@ int main()
     std::exit(EXIT_FAILURE);
   }
 
+  // Extra features
+  glEnable(GL_DEPTH_TEST);
+
   // Set viewport (draw area) to be full framebuffer
   glViewport(0, 0, fb_size.x, fb_size.y);
 
@@ -303,7 +306,8 @@ int main()
     // RENDER ---------------------------------------------------------------------------------------------------------
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background clear color
-    glClear(GL_COLOR_BUFFER_BIT);         // Clear background
+    glClear(GL_COLOR_BUFFER_BIT |
+            GL_DEPTH_BUFFER_BIT); // Fill color buffer with clear color, fill depth buffer with cleared depth color
 
     // clang-format off
     glUseProgram(gle::shader);
