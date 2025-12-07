@@ -9,8 +9,8 @@
 
 namespace gle
 {
-const GLint     WINDOW_WIDTH  = 500;
-const GLint     WINDOW_HEIGHT = 500;
+const GLint     WINDOW_WIDTH  = 800;
+const GLint     WINDOW_HEIGHT = 600;
 const glm::vec3 FORWARD(0.0f, 0.0f, 1.0f);
 
 const std::filesystem::path VERTEX_SHADER_PATH("../src/glsl/vertex.glsl");
@@ -27,18 +27,18 @@ typedef enum Direction
 } Direction;
 
 Direction tri_trans_dir       = RIGHT; // Direction where tri is moving right now
-float     tri_trans           = 0.5f;  // Current triangle displacement
+float     tri_trans           = 0.0f;  // Current triangle displacement
 float     tri_trans_max       = 0.0f;  // Flip direction once we get this far
 float     tri_trans_increment = 0.0f;  // Amount to move tri by every frame
 
 float tri_rot           = 0.0f;  // Current tri rotation
-float tri_rot_increment = 0.08f; // Rotate by
+float tri_rot_increment = 0.02f; // Rotate by
 
 Direction tri_scale_dir       = RIGHT;
 float     tri_scale           = 1.0f;
 float     tri_scale_min       = 0.5f;
 float     tri_scale_max       = 1.0f;
-float     tri_scale_increment = 0.01f;
+float     tri_scale_increment = 0.001f;
 
 void CreateTriangle()
 {
