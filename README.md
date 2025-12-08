@@ -34,3 +34,27 @@ The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, 
     - For current scope, simply logging error and exiting is best.
 
 ![first-refactor](.github/diagrams/first-refactor.png)
+
+### Shader Object
+
+**Goal:** To have an easily manipulable shader object that composes a mesh object 
+
+- Uniforms will be a map, where key is uniform name and value is the index of the uniform 
+- Types will be a problem! 
+    - Specify type when adding uniform; include it in the value 
+```cpp
+// Example:
+std::map<std::string, std::pair<GLuint, UniformType>> _uniforms;
+
+shader.AddUniform("uniform_name", UniformType.MAT4);
+shader.WriteUniform("uniform_name", new_value); // Knows type and handles accordingly
+```
+- Assume pointer type variant for all uniforms, since thats what we've been doing and seems easiest
+    - *This might introduce errors!* Stay wary.
+- Each shader will be bound to its mesh at initialization
+> We might wanna swap shaders later; this will come later...
+- As always, use RAII!
+
+#### Revision 1:
+
+> TBD!

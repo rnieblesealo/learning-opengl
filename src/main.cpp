@@ -97,9 +97,8 @@ int main()
   };
   // clang-format on
 
-  GLuint pyramid_shader = gle::Shader::MakeShaderProgram(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH);
-
-  gle::Mesh pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
+  gle::Shader pyramid_shader(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
+  gle::Mesh   pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
 
   // ==================================================================================================================
   // MAIN LOOP
@@ -124,6 +123,8 @@ int main()
     model = glm::rotate(model, glm::radians(gle::tri_rot), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 1.0f));
 
+    pyramid_shader.WriteUniformMat4("model", model);
+
     // Update framebuffer size to keep aspect corrected
     glfwGetFramebufferSize(main_window, &gle::fb_size.x, &gle::fb_size.y);
     glViewport(0, 0, gle::fb_size.x, gle::fb_size.y); // Must update viewport to match!
@@ -132,13 +133,15 @@ int main()
     glm::mat4 projection = glm::perspective(
         glm::radians(60.0f), static_cast<GLfloat>(gle::fb_size.x) / static_cast<GLfloat>(gle::fb_size.y), 0.1f, 100.0f);
 
+    pyramid_shader.WriteUniformMat4("projection", projection);
+
     // RENDER ---------------------------------------------------------------------------------------------------------
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background clear color
     glClear(GL_COLOR_BUFFER_BIT |
             GL_DEPTH_BUFFER_BIT); // Fill color buffer with clear color, fill depth buffer with cleared depth color
 
-    pyramid.Draw(model, projection);
+    pyramid.Draw();
 
     glfwSwapBuffers(main_window); // 2 buffer system
   }

@@ -1,78 +1,122 @@
 #include "shader.h"
 #include "util.h"
+#include <cstdlib>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 namespace gle
 {
-void Shader::AddShader(GLuint program, std::string const &shader_code, GLenum shader_type)
+Shader::Shader(std::string const &vertex_shader_path, std::string const &fragment_shader_path)
 {
-  // Create shader object index
-  GLuint this_shader = glCreateShader(shader_type); // Make empty shader of given type and return its ID
-
-  // Marshal source
-  // NOTE: We can stitch together multiple sources into one file; this is why we pack shader source into arrays
-  std::array<GLchar const *, 1> the_code{0};
-  the_code[0] = shader_code.data();
-
-  std::array<GLint, 1> code_length{0};
-  code_length[0] = shader_code.size();
-
-  glShaderSource(this_shader, 1, the_code.data(), code_length.data()); // Param 1 here means only one piece of source
-
-  // Compile shader
-  GLint       result = 0;
-  std::string error_log(1024, 0);
-
-  glCompileShader(this_shader);
-
-  glGetShaderiv(this_shader, GL_COMPILE_STATUS, &result);
-  if (!result)
-  {
-    glGetShaderInfoLog(this_shader, error_log.size(), NULL, error_log.data());
-
-    std::cerr << "Error compiling shader program: " << error_log << std::endl;
-
-    return;
-  }
-
-  // Add compiled shader to program
-  glAttachShader(program, this_shader);
-}
-
-GLuint Shader::MakeShaderProgram(std::string const &vertex_shader_path, std::string const &fragment_shader_path)
-{
-  // Create program index
-  GLuint shader = glCreateProgram();
-  if (!shader)
+  this->_shader = glCreateProgram();
+  if (!_shader)
   {
     std::cerr << "Error creating shader program" << std::endl;
-    return 0; // NOTE: 0 is never a valid shader index in OpenGL; safe to return on error
+    std::exit(EXIT_FAILURE);
   }
 
-  std::string v_shader_code(gle::ReadWholeFile(vertex_shader_path));
-  std::string f_shader_code(gle::ReadWholeFile(fragment_shader_path));
+  std::string vertex_shader_code(gle::ReadWholeFile(vertex_shader_path));
+  std::string fragment_shader_code(gle::ReadWholeFile(fragment_shader_path));
 
   // Compile
-  AddShader(shader, v_shader_code, GL_VERTEX_SHADER);
-  AddShader(shader, f_shader_code, GL_FRAGMENT_SHADER);
+  GLuint vertex_shader = this->_CompileShader(vertex_shader_code, GL_VERTEX_SHADER);
+  if (vertex_shader > 0)
+  {
+    glAttachShader(this->_shader, vertex_shader);
+  }
+
+  GLuint fragment_shader = this->_CompileShader(fragment_shader_code, GL_FRAGMENT_SHADER);
+  if (fragment_shader > 0)
+  {
+    glAttachShader(this->_shader, fragment_shader);
+  }
 
   // Link
+  this->_LinkProgram();
+}
+
+Shader::~Shader() { glDeleteProgram(this->_shader); }
+
+GLuint Shader::_CompileShader(std::string const &shader_code, GLenum shader_type)
+{
+  GLuint shader = glCreateShader(shader_type);
+
+  // NOTE: We can stitch together multiple sources into one file; this is why we pack shader source into arrays
+
+  std::array<GLchar const *, 1> _shader_code{0};
+  _shader_code[0] = shader_code.data();
+
+  std::array<GLint, 1> shader_code_length{0};
+  shader_code_length[0] = shader_code.size();
+
+  glShaderSource(shader, 1, _shader_code.data(), shader_code_length.data());
+
   GLint       result = 0;
   std::string error_log(1024, 0);
 
-  glLinkProgram(shader);
+  glCompileShader(shader);
 
-  glGetProgramiv(shader, GL_LINK_STATUS, &result);
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
   if (!result)
   {
-    glGetProgramInfoLog(shader, error_log.size(), NULL, error_log.data());
+    glGetShaderInfoLog(shader, error_log.size(), NULL, error_log.data());
 
-    std::cerr << "Error linking shader program: " << error_log << std::endl;
-
-    return 0;
+    std::cerr << "Error compiling shader program: " << error_log << std::endl;
+    return 0; // NOTE: Valid GL shader cannot be 0; hence it's safe to return this here
   }
 
-  // OK!
   return shader;
+}
+
+void Shader::_LinkProgram()
+{
+  GLint       result = 0;
+  std::string error_log(1024, 0);
+
+  glLinkProgram(this->_shader);
+
+  glGetProgramiv(this->_shader, GL_LINK_STATUS, &result);
+  if (!result)
+  {
+    glGetProgramInfoLog(this->_shader, error_log.size(), NULL, error_log.data());
+
+    std::cerr << "Error linking shader program: " << error_log << std::endl;
+    std::exit(EXIT_FAILURE);
+  }
+}
+
+bool Shader::Validate(GLuint vao)
+{
+  GLint       validate_res = 0;
+  std::string shader_validate_error_log(1024, 0);
+
+  glValidateProgram(this->_shader);
+
+  glGetProgramiv(this->_shader, GL_VALIDATE_STATUS, &validate_res);
+  if (!validate_res)
+  {
+    glGetProgramInfoLog(this->_shader, shader_validate_error_log.size(), NULL, shader_validate_error_log.data());
+
+    std::cerr << "Error validating shader program: " << shader_validate_error_log << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+GLuint Shader::GetShaderIndex() { return this->_shader; }
+
+// FIXME: Find a better way to do this... Will probably get annoying to have one for each type!
+void Shader::WriteUniformMat4(std::string const &uniform_name, glm::mat4 const &new_value)
+{
+  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
+  if (u_loc == -1)
+  {
+    std::cerr << "Failed to get location for uniform '" << uniform_name << "'" << std::endl;
+  }
+
+  glUniformMatrix4fv(u_loc, 1, GL_FALSE, glm::value_ptr(new_value));
 }
 } // namespace gle
