@@ -31,7 +31,4 @@ target_link_libraries(GLEngine PRIVATE glfw glm::glm GLEW::GLEW
 target_include_directories(GLEngine
                            PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src/include")
 
-target_precompile_headers(GLEngine PRIVATE
-                          "${CMAKE_CURRENT_SOURCE_DIR}/src/include/precomp.h")
-
 target_compile_features(GLEngine PRIVATE cxx_std_17)
