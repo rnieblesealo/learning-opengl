@@ -57,4 +57,9 @@ shader.WriteUniform("uniform_name", new_value); // Knows type and handles accord
 
 #### Revision 1:
 
-> TBD!
+- Simply write the uniforms with a wrapper to the uniform writer for that type; we just need to pass a name and a value
+
+![first-refactor](.github/diagrams/shader-object.png)
+
+- **WARNING:** RIGHT NOW, THE COUPLING RELATIONSHIP BETWEEN SHADER AND MESH MIGHT BE A PERFORMANCE ISSUE
+> e.g. Having to bind and unbind the shader every time we set a uniform might be expensive... *Investigate!*

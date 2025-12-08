@@ -1,0 +1,26 @@
+@startuml
+
+class Mesh {
+    + Mesh(std::vector<GLfloat> const& vertices, std::vector<GLuint> const& indices, GLuint shader)
+    + ~Mesh()
+    + Draw(glm::mat4 const& model, glm::mat4 const& projection)
+    - GLuint _vao, _vbo, _ebo
+    - GLuint _shader
+    - GLuint _u_model, _u_projection
+    - uint16_t _index_count
+}
+
+class Shader {
+    + Shader(std::string const &vertex_shader_path, std::string const &fragment_shader_path);
+    + ~Shader()
+    + void WriteUniformMat4(std::string const &uniform_name, glm::mat4 const &new_value)
+    + bool Validate(GLuint vao)
+    + GLuint GetShaderIndex()
+    - GLuint _CompileShader(std::string const &shader_code, GLenum shader_type)
+    - void _LinkProgram()
+    - GLuint _shader
+}
+
+Mesh *-- Shader
+
+@enduml
