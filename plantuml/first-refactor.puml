@@ -1,0 +1,26 @@
+@startuml
+
+class Mesh {
+    + Mesh(std::vector<GLfloat> const& vertices, std::vector<GLuint> const& indices, GLuint shader)
+    + ~Mesh()
+    + Draw(glm::mat4 const& model, glm::mat4 const& projection)
+    - GLuint _vao, _vbo, _ebo
+    - GLuint _shader
+    - GLuint _u_model, _u_projection
+    - uint16_t _index_count
+}
+
+note bottom of Mesh #white: The shader passed here should be created with the Shader class
+
+class Shader {
+    __ Static Shader Generators __
+    + static void AddShader(GLuint program, std::string const& shader_code, GLenum shader_type);
+    + static GLuint MakeShaderProgram(std::string const& vertex_shader_path, std::string const& fragment_shader_path);
+}
+
+note bottom of Shader #yellow
+Subject to change; encapsulates old functions for now
+but should be an object too!
+end note
+
+@enduml
