@@ -26,7 +26,7 @@ int main()
   // ==================================================================================================================
 
   gle::Window window;
-  // gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 5.0f, 1.0f);
+  gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 5.0f, 1.0f);
 
   // ==================================================================================================================
   // PYRAMID SETUP
@@ -98,7 +98,7 @@ int main()
     pyramid_shader.WriteUniformMat4("projection", projection);
 
     // Compute and pass view matrix
-    // pyramid_shader.WriteUniformMat4("view", camera.CalculateViewMatrix());
+    pyramid_shader.WriteUniformMat4("view", camera.CalculateViewMatrix());
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 
