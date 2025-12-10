@@ -111,4 +111,6 @@ void Window::_HandleMouse(
   _this->_last_x = x_pos;
   _this->_last_y = y_pos;
 }
+
+bool const *Window::GetKeys() { return this->_keys.data(); }
 } // namespace gle

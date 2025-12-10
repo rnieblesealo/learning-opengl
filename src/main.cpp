@@ -1,3 +1,4 @@
+#include "camera.h"
 #include "mesh.h"
 #include "shader.h"
 #include "window.h"
@@ -25,6 +26,7 @@ int main()
   // ==================================================================================================================
 
   gle::Window window;
+  // gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 5.0f, 1.0f);
 
   // ==================================================================================================================
   // PYRAMID SETUP
@@ -60,6 +62,9 @@ int main()
 
     glfwPollEvents();
 
+    // Camera movement
+    // camera.KeyControl(window.GetKeys());
+
     // Rotate triangle
     gle::tri_rot += gle::tri_rot_delta;
     if (gle::tri_rot >= 360.0f)
@@ -91,6 +96,9 @@ int main()
                                             far);
 
     pyramid_shader.WriteUniformMat4("projection", projection);
+
+    // Compute and pass view matrix
+    // pyramid_shader.WriteUniformMat4("view", camera.CalculateViewMatrix());
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 

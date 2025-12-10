@@ -13,9 +13,10 @@ public:
   ~Window();
 
   GLFWwindow *GetHandle();
-  void        PollFramebufferSize();
   GLsizei     GetFramebufferWidth();
   GLsizei     GetFramebufferHeight();
+  bool const *GetKeys();
+  void        PollFramebufferSize();
 
 private:
   GLFWwindow *_window;
