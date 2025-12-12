@@ -68,3 +68,21 @@ shader.WriteUniform("uniform_name", new_value); // Knows type and handles accord
 
 - It's wise to use library-specific types with that library; they may be aliases that help that type behave the same across systems.
 > `GLfloat` for GL stuff, `glm::float32` for GLM stuff, etc.
+
+### Solving the Mouse Drift Problem 
+
+**Issue:** Mouse movement deltas aren't cleared once mouse is lifted; this causes drift when no mouse input.
+
+**Constraints:**
+- Can't check mouse state without this callback
+- Callback is made by window; look movement is handled by camera (we don't want spaghetti)
+
+**Solution:** 
+- Pass window to camera controls
+- Camera consumes window deltas 
+- Camera then resets window deltas to 0
+
+**Tradeoffs:**
+- Requires setting window deltas outside callback which isn't ideal
+- Requires passing window to input handler functions which is ugly
+> Might fix this by making camera keep its own deltas

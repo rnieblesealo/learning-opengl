@@ -116,4 +116,6 @@ bool const *Window::GetKeys() { return this->_keys.data(); }
 
 float Window::GetDx() { return this->_dx; }
 float Window::GetDy() { return this->_dy; }
+void  Window::SetDx(float dx) { this->_dx = dx; };
+void  Window::SetDy(float dy) { this->_dy = dy; }
 } // namespace gle
