@@ -48,9 +48,6 @@ The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, 
 
 ![first-refactor](.github/diagrams/shader-object.png)
 
-- **WARNING:** RIGHT NOW, THE COUPLING RELATIONSHIP BETWEEN SHADER AND MESH MIGHT BE A PERFORMANCE ISSUE
-> e.g. Having to bind and unbind the shader every time we set a uniform might be expensive... *Investigate!*
-
 ### Solving the Mouse Drift Problem 
 
 **Issue:** Mouse movement deltas aren't cleared once mouse is lifted; this causes drift when no mouse input.
