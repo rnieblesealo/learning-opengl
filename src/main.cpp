@@ -1,6 +1,7 @@
 #include "camera.h"
 #include "mesh.h"
 #include "shader.h"
+#include "texture.h"
 #include "window.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -13,8 +14,10 @@
 
 namespace gle
 {
-const std::filesystem::path VERTEX_SHADER_PATH("../src/glsl/vertex.glsl");
-const std::filesystem::path FRAGMENT_SHADER_PATH("../src/glsl/fragment.glsl");
+const std::filesystem::path VERTEX_SHADER_PATH("glsl/vertex.glsl");
+const std::filesystem::path FRAGMENT_SHADER_PATH("glsl/fragment.glsl");
+const std::filesystem::path BRICK_TEXTURE_PATH("assets/brick.png");
+const std::filesystem::path DIRT_TEXTURE_PATH("assets/dirt.png");
 
 float tri_rot       = 0.0f;  // Current tri rotation
 float tri_rot_delta = 0.35f; // Rotate by this angle every frame
@@ -27,10 +30,11 @@ int main()
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
-    -1.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-     0.0f, -1.0f,  1.0f, 0.0f, 0.0f,
-     1.0f, -1.0f,  0.0f, 0.0f, 0.0f,
-     0.0f,  1.0f,  0.0f, 0.0f, 0.0f
+  //    x      y     z       u     v
+    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
+     0.0f, -1.0f, 1.0f,   0.5f, 0.0f,
+     1.0f, -1.0f, 0.0f,   1.0f, 0.0f,
+     0.0f,  1.0f, 0.0f,   0.5f, 1.0f
   };
 
   // These form a shitty pyramid :)
@@ -44,6 +48,8 @@ int main()
 
   gle::Shader pyramid_shader(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
   gle::Mesh   pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
+
+  gle::Texture t_brick(gle::BRICK_TEXTURE_PATH);
 
   auto then = std::chrono::high_resolution_clock::now(); // Initial time for deltatime computation
 
@@ -103,6 +109,7 @@ int main()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    t_brick.UseTexture();
     pyramid.Draw();
 
     glfwSwapBuffers(window.GetHandle());

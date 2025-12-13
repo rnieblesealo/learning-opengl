@@ -5,6 +5,8 @@
 
 namespace gle
 {
+
+// TODO: (slash NOTE): Architecturally, textures are bound to meshes; address the design of this!
 class Texture
 {
 public:

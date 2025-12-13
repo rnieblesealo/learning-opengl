@@ -38,6 +38,13 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets
           $<TARGET_FILE_DIR:GLEngine>/assets)
 
+# Also copy shaders dir
+add_custom_command(
+  TARGET GLEngine
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/glsl
+          $<TARGET_FILE_DIR:GLEngine>/glsl)
+
 # CMAKE_SOURCE_DIR is where CMakeLists.txt is; CURRENT variant is where the
 # currently processed CMakeLists is
 
