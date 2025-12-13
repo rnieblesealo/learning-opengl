@@ -1,6 +1,7 @@
 #include "camera.h"
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 namespace gle
 {
@@ -24,8 +25,10 @@ Camera::Camera(glm::vec3 start_position,
 
 Camera::~Camera() {}
 
-void Camera::KeyControl(bool const *keys, float delta_time)
+void Camera::KeyControl(Window &window, float delta_time)
 {
+  auto keys = window.GetKeys();
+
   if (keys[GLFW_KEY_W])
   {
     this->_position += this->_front * this->_movement_speed * delta_time;
@@ -44,10 +47,10 @@ void Camera::KeyControl(bool const *keys, float delta_time)
   }
 }
 
-void Camera::MouseControl(float dx, float dy)
+void Camera::MouseControl(Window &window)
 {
-  dx *= this->_look_speed;
-  dy *= this->_look_speed;
+  float dx = window.GetDx() * this->_look_speed;
+  float dy = window.GetDy() * this->_look_speed;
 
   this->_yaw += dx;
   this->_pitch += dy;
@@ -55,6 +58,10 @@ void Camera::MouseControl(float dx, float dy)
   this->_pitch = glm::clamp(this->_pitch, -90.0f, 90.0f); // You can't turn your head beyond your spine...
 
   this->_Update();
+
+  // Clear deltas after cursor pos callback
+  window.SetDx(0);
+  window.SetDy(0);
 }
 
 glm::mat4 Camera::CalculateViewMatrix()

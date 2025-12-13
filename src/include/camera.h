@@ -1,5 +1,6 @@
 #pragma once
 
+#include "window.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -16,8 +17,8 @@ public:
          GLfloat   start_look_speed);
   ~Camera();
 
-  void      KeyControl(bool const *keys, float delta_time);
-  void      MouseControl(float dx, float dy);
+  void      KeyControl(Window &window, float delta_time);
+  void      MouseControl(Window &window);
   glm::mat4 CalculateViewMatrix();
 
 private:

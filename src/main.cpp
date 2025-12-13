@@ -26,7 +26,7 @@ float tri_rot_delta = 0.35f; // Rotate by this angle every frame
 int main()
 {
   gle::Window window;
-  gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.05f);
+  gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
@@ -63,8 +63,8 @@ int main()
     then             = now;
 
     // Camera movement
-    camera.KeyControl(window.GetKeys(), delta_time);
-    camera.MouseControl(window.GetDx(), window.GetDy());
+    camera.KeyControl(window, delta_time);
+    camera.MouseControl(window);
 
     // Rotate triangle
     gle::tri_rot += gle::tri_rot_delta;

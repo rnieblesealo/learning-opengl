@@ -8,10 +8,11 @@ The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, 
 
 # Design Stuff
 
-### First Refactor
+### Mesh Object
 
-**Goal:** Encapsulate model data and state into generic Mesh class
+**Goal:** Encapsulate model data and state into generic Mesh class with shader support in mind
 
+**Approach:**
 - Should only focus on holding a mesh object and its functionality (drawing, mainly)
     - **Rationale:** We want a generic mesh class so we can have many different objects with a common interface 
 - Each mesh has its own VAO, VBO(s?), and EBO
@@ -39,30 +40,31 @@ The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, 
 
 **Goal:** To have an easily manipulable shader object that composes a mesh object 
 
-- Uniforms will be a map, where key is uniform name and value is the index of the uniform 
-- Types will be a problem! 
-    - Specify type when adding uniform; include it in the value 
-```cpp
-// Example:
-std::map<std::string, std::pair<GLuint, UniformType>> _uniforms;
+**Approach:** Simply write the uniforms with a wrapper to `glUniform...()` specific to that type; we then just need to pass a name and a value
 
-shader.AddUniform("uniform_name", UniformType.MAT4);
-shader.WriteUniform("uniform_name", new_value); // Knows type and handles accordingly
-```
-- Assume pointer type variant for all uniforms, since thats what we've been doing and seems easiest
-    - *This might introduce errors!* Stay wary.
-- Each shader will be bound to its mesh at initialization
-> We might wanna swap shaders later; this will come later...
-- As always, use RAII!
-
-#### Revision 1:
-
-- Simply write the uniforms with a wrapper to the uniform writer for that type; we just need to pass a name and a value
+**Tradeoffs:**
+- Requires defining a wrapper method to every uniform type; will not scale to all types
+- Requires switching to the shader program every time we set uniforms; will be expensive if we're doing lots of setting!
 
 ![first-refactor](.github/diagrams/shader-object.png)
 
-- **WARNING:** RIGHT NOW, THE COUPLING RELATIONSHIP BETWEEN SHADER AND MESH MIGHT BE A PERFORMANCE ISSUE
-> e.g. Having to bind and unbind the shader every time we set a uniform might be expensive... *Investigate!*
+### Solving the Mouse Drift Problem 
+
+**Issue:** Mouse movement deltas aren't cleared once mouse is lifted; this causes drift when no mouse input.
+
+**Constraints:**
+- Can't check mouse state without this callback
+- Callback is made by window; look movement is handled by camera (we don't want spaghetti)
+
+**Solution:** 
+- Pass window to camera controls
+- Camera consumes window deltas 
+- Camera then resets window deltas to 0
+
+**Tradeoffs:**
+- Requires setting window deltas outside callback which isn't ideal
+- Requires passing window to input handler functions which is ugly
+> Might fix this by making camera keep its own deltas
 
 # Learnings
 
