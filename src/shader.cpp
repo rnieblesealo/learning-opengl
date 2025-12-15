@@ -116,11 +116,41 @@ void Shader::WriteUniformMat4(std::string const &uniform_name, glm::mat4 const &
   GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
   if (u_loc == -1)
   {
-    std::cerr << "Failed to get location for uniform '" << uniform_name << "'" << std::endl;
+    std::cerr << "Failed to get location for uniform Mat4 '" << uniform_name << "'" << std::endl;
   }
 
   glUniformMatrix4fv(u_loc, 1, GL_FALSE, glm::value_ptr(new_value));
 
   glUseProgram(0);
 }
+
+void Shader::WriteUniformVec3(std::string const &uniform_name, glm::vec3 const &new_value)
+{
+  glUseProgram(this->_shader);
+
+  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
+  if (u_loc == -1)
+  {
+    std::cerr << "Failed to get location for uniform Vec3 '" << uniform_name << "'" << std::endl;
+  }
+
+  glUniform3f(u_loc, new_value.x, new_value.y, new_value.z);
+
+  glUseProgram(0);
+}
+
+void Shader::WriteUniformFloat(std::string const &uniform_name, glm::float32 new_value)
+{
+  glUseProgram(this->_shader);
+
+  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
+  if (u_loc == -1)
+  {
+    std::cerr << "Failed to get location for uniform Float '" << uniform_name << "'" << std::endl;
+  }
+
+  glUniform1f(u_loc, new_value);
+
+  glUseProgram(0);
+};
 } // namespace gle

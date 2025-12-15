@@ -24,14 +24,14 @@ target_compile_features(GLEngine PRIVATE cxx_std_17)
 # Copy parent dir assets to build;  WARNING: Not ideal for lots of assets!
 add_custom_command(
   TARGET GLEngine
-  POST_BUILD
+  PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets
           $<TARGET_FILE_DIR:GLEngine>/assets)
 
 # Also copy shaders dir
 add_custom_command(
   TARGET GLEngine
-  POST_BUILD
+  PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/glsl
           $<TARGET_FILE_DIR:GLEngine>/glsl)
 

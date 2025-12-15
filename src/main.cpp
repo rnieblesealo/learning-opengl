@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "light.h"
 #include "mesh.h"
 #include "shader.h"
 #include "texture.h"
@@ -29,6 +30,7 @@ int main()
 {
   gle::Window window;
   gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
+  gle::Light  directional_light(1.0f, 1.0f, 1.0f, 1.0f);
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
@@ -105,6 +107,10 @@ int main()
 
     // Compute and pass view matrix
     pyramid_shader.WriteUniformMat4("view", camera.CalculateViewMatrix());
+
+    // Lighting
+    pyramid_shader.WriteUniformVec3("directional_light.color", directional_light.GetColor());
+    pyramid_shader.WriteUniformFloat("directional_light.intensity", directional_light.GetIntensity());
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 
