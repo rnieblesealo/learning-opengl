@@ -10,34 +10,12 @@ file(GLOB_RECURSE GLEngineSources CONFIGURE_DEPENDS
 
 add_executable(GLEngine "${GLEngineSources}")
 
-find_package(glfw3 REQUIRED)
+find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-# OpenGL must be manually linked on Linux
-if (UNIX AND NOT APPLE)
-  # GLVND required for modern graphics
-  set(OpenGL_GL_PREFERENCE "GLVND")
-
-  find_package(OpenGL REQUIRED) 
-endif()
-
-include(FetchContent)
-
-FetchContent_Declare(
-  microsoft-gsl
-  GIT_REPOSITORY "https://github.com/microsoft/GSL"
-  GIT_TAG "v4.2.0"
-  GIT_SHALLOW TRUE)
-
-FetchContent_MakeAvailable(microsoft-gsl)
-
-target_link_libraries(GLEngine PRIVATE glfw glm::glm GLEW::GLEW
-                                       Microsoft.GSL::GSL)
-
-if (UNIX AND NOT APPLE)
-  target_link_libraries(GLEngine PRIVATE OpenGL::GL)
-endif()
+target_link_libraries(GLEngine PRIVATE glfw glm::glm GLEW::GLEW OpenGL::GL)
 
 target_include_directories(GLEngine PRIVATE "${CMAKE_SOURCE_DIR}/src/include")
 
