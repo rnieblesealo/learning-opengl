@@ -7,11 +7,15 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 namespace gle
 {
@@ -24,21 +28,77 @@ const std::filesystem::path OBAMA_TEXTURE_PATH("assets/obama.png");
 
 float tri_rot       = 0.0f; // Current tri rotation
 float tri_rot_delta = 0.0f; // Rotate by this angle every frame
+
+void CalcAverageNormals(std::vector<GLfloat> &vertices,
+                        uint32_t              v_size,
+                        std::vector<GLuint>  &indices,
+                        uint32_t              n_offset)
+{
+  for (int i = 0; i < indices.size(); i += 3)
+  {
+    // Compute indices to vertices comprising this face
+    uint32_t in0 = indices[i] * v_size;
+    uint32_t in1 = indices[i + 1] * v_size;
+    uint32_t in2 = indices[i + 2] * v_size;
+
+    // Compute 2 edges of the face
+    glm::vec3 v1(
+        vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
+
+    glm::vec3 v2(
+        vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
+
+    // Get the face normal from their cross product
+    glm::vec3 norm(glm::cross(v1, v2));
+    norm = glm::normalize(norm);
+
+    std::cout << glm::to_string(v1) << glm::to_string(v2) << glm::to_string(norm) << std::endl;
+
+    // Add the normal to each of the face vertices
+    in0 += n_offset;
+    in1 += n_offset;
+    in2 += n_offset;
+
+    vertices[in0] += norm.x;
+    vertices[in0 + 1] += norm.y;
+    vertices[in0 + 2] += norm.z;
+
+    vertices[in1] += norm.x;
+    vertices[in1 + 1] += norm.y;
+    vertices[in1 + 2] += norm.z;
+
+    vertices[in2] += norm.x;
+    vertices[in2 + 1] += norm.y;
+    vertices[in2 + 2] += norm.z;
+  }
+
+  for (int i = 0; i < vertices.size() / v_size; ++i)
+  {
+    uint32_t offset = i * v_size * n_offset;
+
+    glm::vec3 vec(vertices[n_offset], vertices[n_offset + 1], vertices[n_offset + 2]);
+    vec = glm::normalize(vec);
+
+    vertices[n_offset]     = vec.x;
+    vertices[n_offset + 1] = vec.y;
+    vertices[n_offset + 2] = vec.z;
+  }
+}
 } // namespace gle
 
 int main()
 {
   gle::Window window;
   gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
-  gle::Light  directional_light(1.0f, 1.0f, 1.0f, 1.0f);
+  gle::Light  directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.2f, 1.0f);
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
-  //    x      y     z       u     v
-    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,
-     1.0f, -1.0f, 0.0f,   1.0f, 0.0f,
-     0.0f,  1.0f, 0.0f,   1.0f, 1.0f,
-     0.0f, -1.0f, 1.0f,   0.5f, 0.0f,
+  //    x      y     z       u     v      nx    ny    nz
+    -1.0f, -1.0f, 0.0f,   0.0f, 0.0f,   0.0f, 0.0f, 0.0f,
+     1.0f, -1.0f, 0.0f,   1.0f, 0.0f,   0.0f, 0.0f, 0.0f,
+     0.0f,  1.0f, 0.0f,   1.0f, 1.0f,   0.0f, 0.0f, 0.0f,
+     0.0f, -1.0f, 1.0f,   0.5f, 0.0f,   0.0f, 0.0f, 0.0f,
   };
 
   // These form a shitty pyramid :)
@@ -49,6 +109,13 @@ int main()
     0, 1, 2
   };
   // clang-format on
+
+  gle::CalcAverageNormals(pyramid_vertices, 8, pyramid_indices, 5);
+
+  for (auto const &n : pyramid_vertices)
+  {
+    std::cout << " " << n << " " << std::endl;
+  }
 
   gle::Shader pyramid_shader(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
   gle::Mesh   pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
@@ -110,7 +177,9 @@ int main()
 
     // Lighting
     pyramid_shader.WriteUniformVec3("directional_light.color", directional_light.GetColor());
-    pyramid_shader.WriteUniformFloat("directional_light.intensity", directional_light.GetIntensity());
+    pyramid_shader.WriteUniformVec3("directional_light.direction", directional_light.GetDirection());
+    pyramid_shader.WriteUniformFloat("directional_light.ambient_intensity", directional_light.GetAmbientIntensity());
+    pyramid_shader.WriteUniformFloat("directional_light.diffuse_intensity", directional_light.GetDiffuseIntensity());
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 
@@ -122,4 +191,4 @@ int main()
 
     glfwSwapBuffers(window.GetHandle());
   }
-}
+} // namespace gle

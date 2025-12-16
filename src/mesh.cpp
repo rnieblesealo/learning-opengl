@@ -29,7 +29,7 @@ Mesh::Mesh(std::vector<GLfloat> const &vertices, std::vector<GLuint> const &indi
                         3,                           // Amount of components in position (x, y, z make 3)
                         GL_FLOAT,                    // Data type of each vertex
                         GL_FALSE,                    // Normalize the vertices?
-                        sizeof vertices.front() * 5, // Stride; jump this amount of bytes to get to next vertex
+                        sizeof vertices.front() * 8, // Stride; jump this amount of bytes to get to next vertex
                         0                            // Offset from first VBO value where data actually begins
   );
 
@@ -40,9 +40,14 @@ Mesh::Mesh(std::vector<GLfloat> const &vertices, std::vector<GLuint> const &indi
 
   // Texture coordinate vertex attributes
   glVertexAttribPointer(
-      1, 2, GL_FLOAT, GL_FALSE, sizeof vertices.front() * 5, reinterpret_cast<void *>(sizeof vertices.front() * 3));
+      1, 2, GL_FLOAT, GL_FALSE, sizeof vertices.front() * 8, reinterpret_cast<void *>(sizeof vertices.front() * 3));
 
   glEnableVertexAttribArray(1);
+
+  glVertexAttribPointer(
+      2, 3, GL_FLOAT, GL_FALSE, sizeof vertices.front() * 8, reinterpret_cast<void *>(sizeof vertices.front() * 5));
+
+  glEnableVertexAttribArray(2);
 
   // AttribPointer Pattern: Define for 0, set for 0...
 
