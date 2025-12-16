@@ -6,6 +6,10 @@
 
 The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, but gotta start somewhere!
 
+![camera-texture](.github/camera-texture.gif)
+
+Added basic textures and implemented a scene view camera! WASD to move around, mouse movement to look around.
+
 # Design Stuff
 
 ### Mesh Object
@@ -70,3 +74,4 @@ The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, 
 
 - It's wise to use library-specific types with that library; they may be aliases that help that type behave the same across systems.
 > `GLfloat` for GL stuff, `glm::float32` for GLM stuff, etc.
+- Premature optimization is bad; don't fix something that isn't even finished!
