@@ -9,7 +9,6 @@
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <cstdint>
-#include <cstdlib>
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -82,10 +81,14 @@ void CalcAverageNormals(std::vector<GLfloat> &vertices,
 
 int main()
 {
-  gle::Window   window;
-  gle::Camera   camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
-  gle::Light    directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.1f, 0.5f);
-  gle::Material material(0.6f, 10.0f);
+  gle::Window window;
+
+  gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
+  gle::Light  directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.1f, 0.5f);
+
+  gle::Shader   s_phong(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
+  gle::Texture  t_metal(gle::METAL_TEXTURE_PATH);
+  gle::Material pyramid_material(s_phong, t_metal, 0.6f, 10.0f); // Material with Phong shading and metallic texture
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
@@ -107,10 +110,7 @@ int main()
 
   gle::CalcAverageNormals(pyramid_vertices, 8, pyramid_indices, 5);
 
-  gle::Shader pyramid_shader(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
-  gle::Mesh   pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
-
-  gle::Texture t_metal(gle::METAL_TEXTURE_PATH);
+  gle::Mesh pyramid(pyramid_vertices, pyramid_indices, pyramid_material);
 
   auto then = std::chrono::high_resolution_clock::now(); // Initial time for deltatime computation
 
@@ -143,7 +143,7 @@ int main()
     model = glm::rotate(model, glm::radians(gle::tri_rot), glm::vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, glm::vec3(0.5f, 0.5f, 1.0f));
 
-    pyramid_shader.WriteUniformMat4("model", model);
+    s_phong.WriteUniformMat4("model", model);
 
     // Update framebuffer size to keep aspect corrected
     window.PollFramebufferSize();
@@ -160,31 +160,34 @@ int main()
                                             near,
                                             far);
 
-    pyramid_shader.WriteUniformMat4("projection", projection);
+    s_phong.WriteUniformMat4("projection", projection);
 
     // Compute and pass view matrix
-    pyramid_shader.WriteUniformMat4("view", camera.CalculateViewMatrix());
+    s_phong.WriteUniformMat4("view", camera.CalculateViewMatrix());
 
     // Lighting
-    pyramid_shader.WriteUniformVec3("directional_light.color", directional_light.GetColor());
-    pyramid_shader.WriteUniformVec3("directional_light.direction", directional_light.GetDirection());
-    pyramid_shader.WriteUniformFloat("directional_light.ambient_intensity", directional_light.GetAmbientIntensity());
-    pyramid_shader.WriteUniformFloat("directional_light.diffuse_intensity", directional_light.GetDiffuseIntensity());
+    s_phong.WriteUniformVec3("directional_light.color", directional_light.GetColor());
+    s_phong.WriteUniformVec3("directional_light.direction", directional_light.GetDirection());
+    s_phong.WriteUniformFloat("directional_light.ambient_intensity", directional_light.GetAmbientIntensity());
+    s_phong.WriteUniformFloat("directional_light.diffuse_intensity", directional_light.GetDiffuseIntensity());
 
     // Camera
-    pyramid_shader.WriteUniformVec3("eye_pos", camera.GetPosition());
+    s_phong.WriteUniformVec3("eye_pos", camera.GetPosition());
 
     // Material
-    pyramid_shader.WriteUniformFloat("material.shininess", material.GetShininess());
-    pyramid_shader.WriteUniformFloat("material.specular_intensity", material.GetSpecularIntensity());
+    s_phong.WriteUniformFloat("material.shininess", pyramid_material.GetShininess());
+    s_phong.WriteUniformFloat("material.specular_intensity", pyramid_material.GetSpecularIntensity());
 
     // RENDER ---------------------------------------------------------------------------------------------------------
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    t_metal.UseTexture();
-    pyramid.Draw();
+    // clang-format off
+    pyramid_material.UseMaterial();
+      directional_light.WriteLightProperties(pyramid_material.Getu); // TODO: I don't like that we have to pass the material... Frick. INTERIM SOLN: Pass in table of uniform instead of whole material!
+      pyramid.Draw(pyramid_material);
+    // clang-format on
 
     glfwSwapBuffers(window.GetHandle());
   }

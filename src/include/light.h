@@ -1,5 +1,6 @@
 #pragma once
 
+#include "material.h"
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -16,10 +17,7 @@ public:
         glm::float32 diffuse_intensity);
   ~Light();
 
-  glm::vec3 const &GetDirection();
-  glm::vec3 const &GetColor();
-  glm::float32     GetAmbientIntensity();
-  glm::float32     GetDiffuseIntensity();
+  void WriteLightProperties(Material &material);
 
 private:
   glm::vec3    _direction;

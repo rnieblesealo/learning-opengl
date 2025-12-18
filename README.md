@@ -70,6 +70,8 @@ A small program made to learn the ins and outs of OpenGL. Enjoy my journey into 
 - Requires passing window to input handler functions which is ugly
 > Might fix this by making camera keep its own deltas
 
+### Organizing Things More
+
 ## BIG Lessons 
 
 - It's wise to use library-specific types with that library; they may be aliases that help that type behave the same across systems.

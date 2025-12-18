@@ -8,6 +8,23 @@
 
 namespace gle
 {
+
+// clang-format off
+std::array<std::string, 13> _GLE_BASE_SHADER_UNIFORMS{
+  "model",
+  "projection",
+  "view",
+  "sampler",
+  "eye_pos",
+  "light_properties.color",
+  "light_properties.direction",
+  "light_properties.ambient_intensity",
+  "light_properties.diffuse_intensity",
+  "material_properties.shininess"
+  "material_properties.specular_intensity"
+};
+// clang-format on
+
 Shader::Shader(std::string const &vertex_shader_path, std::string const &fragment_shader_path)
 {
   this->_shader = glCreateProgram();
@@ -35,6 +52,9 @@ Shader::Shader(std::string const &vertex_shader_path, std::string const &fragmen
 
   // Link
   this->_LinkProgram();
+
+  // Build uniforms
+  this->_BuildUniformTable();
 }
 
 Shader::~Shader() { glDeleteProgram(this->_shader); }
@@ -108,49 +128,32 @@ bool Shader::Validate(GLuint vao)
 
 GLuint Shader::GetShaderIndex() { return this->_shader; }
 
-void Shader::WriteUniformMat4(std::string const &uniform_name, glm::mat4 const &new_value)
+GLuint Shader::GetUniformLocation(std::string uniform_name)
 {
-  // WARNING: Shader must be bound!
-  glUseProgram(this->_shader);
-
-  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
-  if (u_loc == -1)
+  auto loc = this->_uniform_table.find(uniform_name);
+  if (loc == this->_uniform_table.end())
   {
-    std::cerr << "Failed to get location for uniform Mat4 '" << uniform_name << "'" << std::endl;
+    std::cerr << "Failed to find uniform '" << uniform_name << "'" << std::endl;
+    std::exit(EXIT_FAILURE);
   }
 
-  glUniformMatrix4fv(u_loc, 1, GL_FALSE, glm::value_ptr(new_value));
-
-  glUseProgram(0);
+  return loc->second;
 }
 
-void Shader::WriteUniformVec3(std::string const &uniform_name, glm::vec3 const &new_value)
+void Shader::_BuildUniformTable()
 {
-  glUseProgram(this->_shader);
-
-  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
-  if (u_loc == -1)
+  for (auto const &uniform : _GLE_BASE_SHADER_UNIFORMS)
   {
-    std::cerr << "Failed to get location for uniform Vec3 '" << uniform_name << "'" << std::endl;
+    GLint u_loc = glGetUniformLocation(this->_shader, uniform.c_str());
+    if (u_loc == -1)
+    {
+      std::cerr << "Failed to get location for uniform Float '" << uniform << "'" << std::endl;
+      std::exit(EXIT_FAILURE);
+    }
+
+    this->_uniform_table.emplace(uniform, u_loc); // .emplace() adds new entry; I picked it cuz I like the syntax
   }
-
-  glUniform3f(u_loc, new_value.x, new_value.y, new_value.z);
-
-  glUseProgram(0);
 }
 
-void Shader::WriteUniformFloat(std::string const &uniform_name, glm::float32 new_value)
-{
-  glUseProgram(this->_shader);
-
-  GLint u_loc = glGetUniformLocation(this->_shader, uniform_name.c_str());
-  if (u_loc == -1)
-  {
-    std::cerr << "Failed to get location for uniform Float '" << uniform_name << "'" << std::endl;
-  }
-
-  glUniform1f(u_loc, new_value);
-
-  glUseProgram(0);
-};
+void Shader::UseShader() { glUseProgram(this->_shader); }
 } // namespace gle

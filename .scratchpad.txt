@@ -1,0 +1,196 @@
+I. RELATIONSHIP BETWEEN SHADER, MESH, MAT. AND TEXTURES
+
+the shader fundamentally defines object's interaction with the environment
+a texture is a parameter to the shader (i.e. the shader samples the texture)
+the material is a container of shader and texture
+in our case the material class will encapsulate shader and texture
+a mesh then uses the material to be rendered
+
+     mesh
+       |
+    material
+    /      \
+  texture shader
+
+II. INTERACTING WITH OPENGL TO SET UNIFORMS
+
+currently we use glsl type-specific functions to set uniforms of a shader
+this is inefficient because we need to switch program every time we set uniforms
+global state changes are expensive in opengl
+as such, we need to batch setting uniforms under one glswitchprogram call
+i.e., we need to set all of a shader's uniforms under a single program switch call 
+
+it could look like:
+
+-----------------------------------------------------------------------------------------------------------------------
+
+shaderA;
+shaderB;
+
+objectA(shaderA);
+objectB(shaderA);
+objectC(shaderB);
+
+glUseProgram(shaderA); // Switch into program A
+
+shaderA.WriteUniform(a);
+shaderA.WriteUniform(b);
+
+objectA.Draw(); // Draw object A with the uniform settings we want for it
+
+shaderA.WriteUniform(x);
+shaderA.WriteUniform(y);
+
+objectB.Draw(); // Draw object B with the uniform settings we want for it
+
+glUseProgram(shaderB); // Switch into program B
+
+shaderB.WriteUniform(z);
+
+objectC.Draw(); // Draw object C with the uniforms we want for it
+-----------------------------------------------------------------------------------------------------------------------
+
+batching uniform setting like this ensures that: 
+  - if 2 diff. objects share the same shader, they can still be drawn with different uniform settings 
+  - we do everything we need under a single glUseProgram call
+
+obstacles:
+  - how do we write uniforms easily + safely? -- there are UBOs, but i want to avoid using things the course doesn't for less complexity
+  - how do we logically group these operations using the material hierarchy?
+
+proposal:
+
+group operations by materials:
+
+-----------------------------------------------------------------------------------------------------------------------
+materialA
+materialB
+objectsUsingMaterialA[]
+objectsUsingMaterialB[]
+
+UseMaterial(materialA)
+for (object in objectsUsingMaterialA)
+  object.WriteUniforms()
+  object.Draw()
+  
+UseMaterial(materialB)
+for (object in objectsUsingMaterialB)
+  object.WriteUniforms()
+  object.Draw()
+-----------------------------------------------------------------------------------------------------------------------
+
+how this would work:
+
+1. instantiate materials
+2. pass material to mesh when instantiating it -> Mesh(material);
+3. each material holds an array of meshes that use it 
+4. in main loop:
+  a. switch into each material -> UseMaterial() 
+  b. iterate over that material's users
+  c. write the desired uniforms (from properties of material, mesh, and shader)
+  d. draw the object
+* repeat above for all materials
+
+managing uniforms:
+
+fields like transform, material properties, etc. that are passed as uniforms are given to, material, mesh and texture as needed 
+for example:
+
+-----------------------------------------------------------------------------------------------------------------------
+class Material {
+  float shininess;
+  float specular_intensity;
+};
+
+class Mesh {
+  vec3 translation;
+  vec3 rotation;
+  vec3 scale;
+  ...
+}
+class Texture {
+  byte* data;
+}
+-----------------------------------------------------------------------------------------------------------------------
+
+they then get internally written as uniforms under a single DrawMesh call:
+
+-----------------------------------------------------------------------------------------------------------------------
+Texture someTexture;
+Shader someShader;
+Material someMaterial(someShader, someTexture);
+Mesh someMesh(Material);
+
+A.translation = (0, 0, 0);
+
+Mesh::Draw(){
+  glWriteUniform("position", this->translation);
+  glWriteUniform("rotation", this->rotation);
+  glWriteUniform("shininess", this->material->shininess); // We should be bound to the right material by ext. batching!
+
+  glBindVertexArray(this->vao)
+    glDrawElements(...) 
+  glBindVertexArray(0)
+}
+-----------------------------------------------------------------------------------------------------------------------
+
+in short:
+
+-----------------------------------------------------------------------------------------------------------------------
+UseMaterial(a)
+  DrawMeshes() // Will write its uniforms to program of material A 
+UseMaterial(b)
+  DrawMeshes() // Will write its uniforms to program of material B 
+UseMaterial(0)
+-----------------------------------------------------------------------------------------------------------------------
+
+what about lights?
+
+add em in as uniform writers, similar to meshes:
+
+-----------------------------------------------------------------------------------------------------------------------
+  UseMaterial(a)
+    SetCamera(cam) // Will write its uniforms to whatever material is bound
+    SetLights()  // Will write its lighting-related uniforms to program of material a
+    DrawMeshes() // Will write its mesh-related uniforms to program of material b 
+  UseMaterial(b)
+    SetLights()   // Same pattern here
+    DrawMeshes() 
+  UseMaterial(0)
+-----------------------------------------------------------------------------------------------------------------------
+
+okay! sounds solid
+
+the key here is that uniforms are assumed to be shader interpretations of several class attributes
+so our shaders must use common uniforms
+
+APPENDIX A. UNIVERSAL UNIFORMS
+
+what about the view + projection matrices? they are common to all materials but must also be set!
+easy, batch them under usematerial similar to lighting:
+
+-----------------------------------------------------------------------------------------------------------------------
+  UseMaterial(a)
+    *SetCamera(cam) // Will write its uniforms to whatever material is bound
+    SetLights()
+    DrawMeshes()
+  UseMaterial(b)
+    SetCamera(cam)
+    SetLights()
+    DrawMeshes() 
+  UseMaterial(0)
+-----------------------------------------------------------------------------------------------------------------------
+
+a better approach to this seems creating classes to encapsulate shaders
+these shader classes would manage all uniforms for us and we would be able to use inheritance to extend some properties
+this is noteworthy in a more large-scale program
+
+APPENDIX B. PROBLEMS I RAN INTO
+
+- for lights and camera, we must pass the uniform table for lookups which isn't super ideal
+- also, even though the material is a property of the mesh, there are some issues with implementing this
+  - we must validate the mesh against the shader, requiring us to pass shader in constructor
+  - the pattern doesn't add up:
+      set active material the nrender mesh with that material seems loose
+        we can forget to set the appropriate material active and call draw on a mesh using it
+        this can lead to easy misuse and consequent errors; it's very unsafe and would SUCK in prod 

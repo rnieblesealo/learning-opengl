@@ -17,8 +17,19 @@ Light::Light(glm::float32 r,
 
 Light::~Light() {}
 
-glm::vec3 const &Light::GetColor() { return this->_color; }
-glm::vec3 const &Light::GetDirection() { return this->_direction; }
-glm::float32     Light::GetAmbientIntensity() { return this->_ambient_intensity; }
-glm::float32     Light::GetDiffuseIntensity() { return this->_diffuse_intensity; }
+void Light::WriteLightProperties(Material &material)
+{
+  glUniform3f(material.GetShader().GetUniformLocation("directional_light.color"),
+              this->_color.r,
+              this->_color.g,
+              this->_color.b);
+
+  glUniform3f(material.GetShader().GetUniformLocation("directional_light.direction"),
+              this->_direction.x,
+              this->_direction.y,
+              this->_direction.z);
+
+  glUniform1f(material.GetShader().GetUniformLocation("directional_light.ambient_intensity"), this->_ambient_intensity);
+  glUniform1f(material.GetShader().GetUniformLocation("directional_light.diffuse_intensity"), this->_diffuse_intensity);
+}
 } // namespace gle

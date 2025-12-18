@@ -2,27 +2,46 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <map>
 #include <string>
 
 namespace gle
 {
 class Shader
+/**
+ * BASE UNIFORMS FOR GLE SHADER
+ *
+ * mat4               model
+ * mat4               projection
+ * mat4               view
+ * sampler2D          sampler
+ * vec3               eye_pos
+ * LightProperties    light_properties
+ *    vec3              .color
+ *    vec3              .direction
+ *    float             .ambient_intensity
+ *    float             .diffuse_intensity
+ * MaterialProperties material_properties
+ *    float             .shininess
+ *    float             .specular_intensity
+ */
 {
 public:
   Shader(std::string const &vertex_shader_path, std::string const &fragment_shader_path);
   ~Shader();
 
-  void WriteUniformMat4(std::string const &uniform_name, glm::mat4 const &new_value);
-  void WriteUniformVec3(std::string const &uniform_name, glm::vec3 const &new_value);
-  void WriteUniformFloat(std::string const &uniform_name, glm::float32 new_value);
-
-  bool   Validate(GLuint vao);
   GLuint GetShaderIndex();
+  GLuint GetUniformLocation(std::string uniform_name);
+
+  bool Validate(GLuint vao);
+  void UseShader();
 
 private:
-  GLuint _shader;
+  GLuint                        _shader;
+  std::map<std::string, GLuint> _uniform_table;
 
   GLuint _CompileShader(std::string const &shader_code, GLenum shader_type);
   void   _LinkProgram();
+  void   _BuildUniformTable();
 };
 } // namespace gle

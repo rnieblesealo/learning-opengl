@@ -2,20 +2,25 @@
 #include "shader.h"
 
 #include <cstdlib>
+#include <iostream>
 #include <vector>
 
 namespace gle
 {
-Mesh::Mesh(std::vector<GLfloat> const &vertices, std::vector<GLuint> const &indices, Shader &shader)
-    : _shader(shader)
+Mesh::Mesh(std::vector<GLfloat> const &vertices, std::vector<GLuint> const &indices, Material &material)
+    : _material(material)
+    , _translation(glm::vec3(0.0f, 0.0f, 0.0f))
+    , _rotation(0.0f)
+    , _scale(glm::vec3(1.0f, 1.0f, 1.0f))
 {
   // Gen VAO
   glGenVertexArrays(1, &this->_vao);
   glBindVertexArray(this->_vao);
 
-  // Validate shader against VAO
-  if (!shader.Validate(this->_vao))
+  // Validate material shader against VAO
+  if (!material.GetShader().Validate(this->_vao))
   {
+    std::cerr << "Failed to validate material aganist mesh VAO" << std::endl;
     std::exit(EXIT_FAILURE);
   }
 
@@ -71,16 +76,23 @@ Mesh::~Mesh()
   glDeleteVertexArrays(1, &this->_vao);
 }
 
-void Mesh::Draw()
+void Mesh::Draw(Material &material)
 {
+  // Assemble and write model matrix
+  glm::mat4 model(1.0f);
+  model = glm::translate(model, this->_translation); // NOTE: When doing persp, Z into screen is negative!
+  model = glm::rotate(model, glm::radians(this->_rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+  model = glm::scale(model, glm::vec3(0.5f, 0.5f, 1.0f));
+
+  glUniformMatrix4fv(this->_material.GetShader().GetUniformLocation("model"), 1, GL_FALSE, glm::value_ptr(model));
+
+  // Make draw call for this mesh
   // clang-format off
-  glUseProgram(this->_shader.GetShaderIndex());
-    glBindVertexArray(this->_vao);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_ebo);
-        glDrawElements(GL_TRIANGLES, this->_index_count, GL_UNSIGNED_INT, 0);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-  glUseProgram(0);
+  glBindVertexArray(this->_vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->_ebo);
+      glDrawElements(GL_TRIANGLES, this->_index_count, GL_UNSIGNED_INT, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
   // clang-format on
 }
 } // namespace gle
