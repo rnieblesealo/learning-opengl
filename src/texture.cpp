@@ -33,7 +33,12 @@ Texture::Texture(const std::filesystem::path loc)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); // Nearest neighbor on zoom out 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // Nearest neighbor on zoom in
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data); // Set up texture data
+    /* 
+     * WARNING: This will segfault if we give it an image that isn't in the correct format
+     * Temporary workaround is to make sure that the image file given is RGB (not RGBA)
+     * To check this, run `exiftool <image_file>` on such image and check that `Color Components` says `3`
+     */
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->_width, this->_height, 0, GL_RGB, GL_UNSIGNED_BYTE, texture_data); // Set up texture data
 
     glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 0);

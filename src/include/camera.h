@@ -20,6 +20,7 @@ public:
   void      KeyControl(Window &window, float delta_time);
   void      MouseControl(Window &window);
   glm::mat4 CalculateViewMatrix();
+  glm::vec3 GetPosition();
 
 private:
   glm::vec3 _position;

@@ -1,24 +1,29 @@
-# Cool Milestones
+# GLEngine
 
-### Spinning Pyramid 
+A small program made to learn the ins and outs of OpenGL. Enjoy my journey into computer graphics!
 
-![spinning-pyramid](.github/spinning-pyramid.gif)
+## Cool Milestones
 
-The basics! VAOs, VBOs, IBOs, shaders, transforms, projection... Nothing crazy, but gotta start somewhere!
+<div style="display: grid; grid-template-columns: repeat(2, 1fr);">
+    <div style="display: flex; flex-direction: column; align-items: center">
+        <img src=".github/resized_spinning-pyramid.gif" style="max-width: 300px; aspect-ratio: 1/1"/>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem">Basic pyramid with VAO, IBO, shaders and transforms!</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center">
+        <img src=".github/resized_camera-texture.gif" style="max-width: 300px; aspect-ratio: 1/1"/>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem">Freehand camera and texture sampling</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center">
+        <img src=".github/resized_diffuse.png" style="max-width: 300px; aspect-ratio: 1/1"/>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem">Ambient + diffuse lighting</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center">
+        <img src=".github/resized_specular.gif" style="max-width: 300px; aspect-ratio: 1/1"/>
+        <p style="text-align: center; margin-top: 10px; font-size: 0.9rem">Specular lighting</p>
+    </div>
+</div>
 
-### Movable Camera & Texture Sampling
-
-![camera-texture](.github/camera-texture.gif)
-
-Added basic textures and implemented a scene view camera! WASD to move around, mouse movement to look around.
-
-### Ambient + Diffuse Lighting 
-
-![diffuse-lighting](.github/diffuse.png)
-
-Added ambient and diffuse lighting using the Phong model!
-
-# Design Stuff
+## Software Design  
 
 ### Mesh Object
 
@@ -78,8 +83,9 @@ Added ambient and diffuse lighting using the Phong model!
 - Requires passing window to input handler functions which is ugly
 > Might fix this by making camera keep its own deltas
 
-# Learnings
+## BIG Lessons 
 
 - It's wise to use library-specific types with that library; they may be aliases that help that type behave the same across systems.
 > `GLfloat` for GL stuff, `glm::float32` for GLM stuff, etc.
 - Premature optimization is bad; don't fix something that isn't even finished!
+- `exiftool` is great for learning about image files!

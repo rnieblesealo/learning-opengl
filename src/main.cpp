@@ -1,5 +1,6 @@
 #include "camera.h"
 #include "light.h"
+#include "material.h"
 #include "mesh.h"
 #include "shader.h"
 #include "texture.h"
@@ -13,18 +14,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/string_cast.hpp>
 
 namespace gle
 {
 const std::filesystem::path VERTEX_SHADER_PATH("glsl/vertex.glsl");
 const std::filesystem::path FRAGMENT_SHADER_PATH("glsl/fragment.glsl");
 
-const std::filesystem::path BRICK_TEXTURE_PATH("assets/brick.png");
-const std::filesystem::path DIRT_TEXTURE_PATH("assets/dirt.png");
-const std::filesystem::path OBAMA_TEXTURE_PATH("assets/obama.png");
+const std::filesystem::path METAL_TEXTURE_PATH("assets/metal.jpg");
 
 float tri_rot       = 0.0f; // Current tri rotation
 float tri_rot_delta = 0.0f; // Rotate by this angle every frame
@@ -51,8 +47,6 @@ void CalcAverageNormals(std::vector<GLfloat> &vertices,
     // Get the face normal from their cross product
     glm::vec3 norm(glm::cross(v1, v2));
     norm = glm::normalize(norm);
-
-    std::cout << glm::to_string(v1) << glm::to_string(v2) << glm::to_string(norm) << std::endl;
 
     // Add the normal to each of the face vertices
     in0 += n_offset;
@@ -88,9 +82,10 @@ void CalcAverageNormals(std::vector<GLfloat> &vertices,
 
 int main()
 {
-  gle::Window window;
-  gle::Camera camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
-  gle::Light  directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.2f, 1.0f);
+  gle::Window   window;
+  gle::Camera   camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
+  gle::Light    directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.1f, 0.5f);
+  gle::Material material(0.6f, 10.0f);
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
@@ -112,15 +107,10 @@ int main()
 
   gle::CalcAverageNormals(pyramid_vertices, 8, pyramid_indices, 5);
 
-  for (auto const &n : pyramid_vertices)
-  {
-    std::cout << " " << n << " " << std::endl;
-  }
-
   gle::Shader pyramid_shader(gle::Shader(gle::VERTEX_SHADER_PATH, gle::FRAGMENT_SHADER_PATH));
   gle::Mesh   pyramid(pyramid_vertices, pyramid_indices, pyramid_shader);
 
-  gle::Texture t_brick(gle::BRICK_TEXTURE_PATH);
+  gle::Texture t_metal(gle::METAL_TEXTURE_PATH);
 
   auto then = std::chrono::high_resolution_clock::now(); // Initial time for deltatime computation
 
@@ -181,12 +171,19 @@ int main()
     pyramid_shader.WriteUniformFloat("directional_light.ambient_intensity", directional_light.GetAmbientIntensity());
     pyramid_shader.WriteUniformFloat("directional_light.diffuse_intensity", directional_light.GetDiffuseIntensity());
 
+    // Camera
+    pyramid_shader.WriteUniformVec3("eye_pos", camera.GetPosition());
+
+    // Material
+    pyramid_shader.WriteUniformFloat("material.shininess", material.GetShininess());
+    pyramid_shader.WriteUniformFloat("material.specular_intensity", material.GetSpecularIntensity());
+
     // RENDER ---------------------------------------------------------------------------------------------------------
 
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    t_brick.UseTexture();
+    t_metal.UseTexture();
     pyramid.Draw();
 
     glfwSwapBuffers(window.GetHandle());
