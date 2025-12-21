@@ -1,4 +1,4 @@
-#version 410 core // Metal 4.1
+#version 330 core
 
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec2 in_texcoord;
