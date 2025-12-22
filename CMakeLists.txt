@@ -21,23 +21,14 @@ target_include_directories(GLEngine PRIVATE "${CMAKE_SOURCE_DIR}/src/include")
 
 target_compile_features(GLEngine PRIVATE cxx_std_17)
 
-# Copy parent dir assets to build;  WARNING: Not ideal for lots of assets!
-add_custom_command(
-  TARGET GLEngine
-  PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets
-          $<TARGET_FILE_DIR:GLEngine>/assets)
+add_custom_target(GLEngineShaders ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/src/glsl
+            $<TARGET_FILE_DIR:GLEngine>/glsl
+)
 
-# Also copy shaders dir
-add_custom_command(
-  TARGET GLEngine
-  PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/glsl
-          $<TARGET_FILE_DIR:GLEngine>/glsl)
-
-# CMAKE_SOURCE_DIR is where CMakeLists.txt is; CURRENT variant is where the
-# currently processed CMakeLists is
-
-# CMAKE_COMMAND equates to doing "cmake" in the CLI; it's essentially a CLI
-# command; above, it's same as "cmake -E copy_directory" which is a CMake-safe
-# version of "cp"
+add_custom_target(GLEngineAssets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/assets
+            $<TARGET_FILE_DIR:GLEngine>/assets
+)
