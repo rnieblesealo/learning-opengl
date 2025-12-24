@@ -1,5 +1,5 @@
 #include "camera.h"
-#include "light.h"
+#include "directional-light.h"
 #include "material.h"
 #include "mesh.h"
 #include "shader.h"
@@ -81,10 +81,10 @@ void CalcAverageNormals(std::vector<GLfloat> &vertices,
 
 int main()
 {
-  gle::Window   window;
-  gle::Camera   camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
-  gle::Light    directional_light(1.0f, 1.0f, 1.0f, glm::vec3(2.0f, -1.0f, -2.0f), 0.1f, 0.5f);
-  gle::Material material(0.6f, 10.0f);
+  gle::Window           window;
+  gle::Camera           camera(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 0.0f, 0.0f, 2.0f, 0.1f);
+  gle::DirectionalLight directional_light(1.0f, 1.0f, 1.0f, 0.1f, 0.5f, glm::vec3(2.0f, -1.0f, -2.0f));
+  gle::Material         material(0.6f, 10.0f);
 
   // clang-format off
   std::vector<GLfloat> pyramid_vertices = {
